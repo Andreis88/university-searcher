@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Трекер поступления для нерезидентов ЕС</title>
+<style>
+:root{--bg:#f7f6f2;--card:#fff;--text:#1d1d1b;--muted:#6b6a64;--line:#e3e1d9;--accent:#1f5eff;--ok:#1a7f4b;--warn:#b26a00;--bad:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15161a;--card:#1e2026;--text:#ececea;--muted:#9a9a94;--line:#2e3038;--accent:#6c97ff;--ok:#4cc38a;--warn:#e6a23c;--bad:#ef6b5b;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#15161a;--card:#1e2026;--text:#ececea;--muted:#9a9a94;--line:#2e3038;--accent:#6c97ff;--ok:#4cc38a;--warn:#e6a23c;--bad:#ef6b5b;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 16px}
+.bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
+input,select,button,textarea{font:inherit;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+button{cursor:pointer;width:auto}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+details{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px}
+summary{cursor:pointer;font-weight:600}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px}
+.top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.name{font-weight:650;font-size:16px}
+.meta{color:var(--muted);font-size:13px}
+.badge{font-size:12px;border-radius:99px;padding:2px 10px;border:1px solid var(--line);white-space:nowrap;align-self:flex-start}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:10px 0;font-size:14px}
+dt{color:var(--muted)}dd{margin:0}
+.todo{color:var(--warn)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-size:13px;cursor:pointer;user-select:none}
+.chip.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row select{width:auto}
+a{color:var(--accent)}
+.note{font-size:12px;color:var(--muted);margin-top:16px}
+.dim{opacity:.55}
+.lang{display:flex;justify-content:flex-end}.lang button{padding:3px 12px;font-size:13px;border-radius:99px;color:var(--muted)}
+.io{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:16px}.io button{font-size:13px;padding:5px 12px}
+.warnbox{margin:10px 0 0;padding:8px 10px;border:1px solid var(--warn);border-radius:8px;font-size:13px;color:var(--warn)}
+</style>
+</head>
+<body>
+<main>
+<div class="lang"><button id="lang" aria-label="Language">EN</button></div>
+<h1>Трекер поступления для нерезидентов ЕС</h1>
+<p class="sub">Дедлайны, документы, языковые требования и стипендии в одном месте. Пустые поля помечены «уточнить», так как данные нужно сверять с официальными сайтами.</p>
+
+<div class="bar">
+  <input id="q" placeholder="Поиск по названию">
+  <select id="country"><option value="">Все страны</option></select>
+  <select id="fstatus"><option value="">Любой статус</option></select>
+  <select id="region"><option value="">ЕС и не ЕС</option><option value="eu">Только ЕС</option><option value="non">Только не ЕС</option></select>
+  <select id="tier"></select>
+  <select id="sort"><option value="deadline">По дедлайну</option><option value="eu">Сначала ЕС</option><option value="fee">По стоимости (мин.)</option><option value="name">По названию</option></select>
+</div>
+
+<details>
+  <summary>+ Добавить университет</summary>
+  <div class="form">
+    <input id="n-name" placeholder="Университет *">
+    <input id="n-country" placeholder="Страна (по-русски) *">
+    <input id="n-program" placeholder="Программа">
+    <input id="n-deadline" type="date">
+    <input id="n-lang" placeholder="Язык обучения"><input id="n-exams" placeholder="Экзамены (CEnT, SAT, IELTS 6.5…)">
+    <input id="n-schol" placeholder="Стипендия"><input id="n-fmin" type="number" min="0" placeholder="Стоимость от, €/год"><input id="n-fmax" type="number" min="0" placeholder="Стоимость до, €/год">
+    <input id="n-url" placeholder="Ссылка на официальную страницу"><input id="n-warn" placeholder="Сноска / риски (необязательно)">
+    <button class="primary" id="add">Добавить</button>
+  </div>
+</details>
+
+<div id="list"></div>
+<div class="io"><button id="exp"></button><button id="imp"></button><input id="impf" type="file" accept="application/json,.json" hidden><span id="iomsg" class="meta"></span></div>
+<p class="note">Данные хранятся только в вашем браузере. Прототип: информация носит справочный характер и не заменяет официальные источники.</p>
+</main>
+
+<script>
+const SEED=[
+ {id:"s1",tier:"prio",visa:"Открыта",feeNote:"Низкая (оценка автора)",name:"University of Pisa",country:"Италия",program:"Business Administration & Economics (MBE-L)",deadline:"",lang:"",exams:"CEnT / TOLC-E",schol:"DSU Toscana (по нуждаемости)",url:"https://www.unipi.it",notes:"Нерезидентам нужен ISEE Parificato; дедлайн уточнить"},
+ {id:"s2",tier:"prio",visa:"Открыта",feeNote:"Средняя–высокая без гранта",name:"Corvinus University of Budapest",country:"Венгрия",program:"",deadline:"2027-01-15",lang:"Английский",schol:"Stipendium Hungaricum",url:"https://www.corvinus.hu",notes:"Подача через официальный портал Stipendium Hungaricum зимой; дедлайн ≈ 15 января (приблизительно). Покрывает обучение, стипендию и жильё (по данным автора)"},
+ {id:"s3",tier:"prio",visa:"Открыта",feeNote:"$9 000–13 000/год без гранта",name:"American University in Bulgaria (AUBG)",country:"Болгария",program:"",deadline:"",lang:"Английский",schol:"Merit (до 40%) + need-based",url:"https://www.aubg.edu",notes:""},
+ {id:"s4",tier:"par",name:"Vesalius College",country:"Бельгия",program:"",deadline:"2027-04-15",lang:"Английский",exams:"IELTS 7.0",schol:"Academic Excellence, до 50% оплаты",url:"https://www.vesalius.edu",notes:"Порог по GPA для стипендии указан в ответе университета",src:"письмо университета"},
+ {id:"s5",tier:"paid",feeMin:2500,feeMax:2500,name:"UNIRSM",country:"Сан-Марино",program:"Management Engineering",deadline:"",lang:"Нужен итальянский",schol:"Частичные стипендии",url:"https://www.unirsm.sm",notes:"Вступительного теста нет. Стипендия по конкурсу (балл аттестата + доход семьи), конкурс публикуется в декабре. Экономики как отдельного бакалавриата нет",src:"письмо университета"},
+ {id:"s6",tier:"par",name:"Università di Siena",country:"Италия",program:"",deadline:"",lang:"",exams:"CEnT",schol:"",url:"https://www.unisi.it",notes:"Планируется вступительный CEnT"},
+ {id:"s7",tier:"par",name:"Ca’ Foscari University of Venice",country:"Италия",program:"",deadline:"",lang:"",exams:"CEnT",schol:"",url:"https://www.unive.it",notes:"Планируется CEnT; убедиться, что нужен именно этот вуз Венеции"},
+ {id:"s8",tier:"par",name:"American University in Kosovo (A.U.K.)",country:"Косово",program:"Individualized Study (RIT)",deadline:"",lang:"",schol:"",url:"https://www.auk.org",notes:"Эссе 250–500 слов (Word/PDF) на admissions@auk.org",src:"письмо университета"},
+ {id:"s9",tier:"par",visa:"Открыта",feeNote:"Низкая–средняя (оценка автора)",name:"Bangkok University",country:"Таиланд",program:"BBA Super Talent Scholarship",deadline:"",lang:"Английский",schol:"Super Talent: полное покрытие + стипендия + жильё (по данным автора)",url:"https://www.bu.ac.th",notes:"Эссе, портфолио и подтверждение победы в международном конкурсе"},
+ {id:"s10",tier:"par",name:"Ss. Cyril and Methodius University (UKIM)",country:"Северная Македония",program:"Political Studies (in English), Faculty of Law; часть программ на английском, большинство на македонском",deadline:"2027-09-01",lang:"Английский или македонский; год языковой подготовки (60 ECTS)",exams:"Отбор по среднему баллу аттестата; тест только для архитектуры и искусств",schol:"",url:"https://ukim.edu.mk",feeMin:1500,feeMax:5000,feeNote:"2026/27, для иностранцев: Faculty of Economics — 1 500 €, Political Studies in English — 2 000 €, Software Engineering in English — 2 300 €, медицина/фармация на английском — 5 000 €",notes:"Иностранцы подают заявку на st.student@ukim.edu.mk и отправляют оригиналы в ректорат: диплом с апостилем, транскрипты, свидетельства о рождении и гражданстве. Дедлайн ≈1 сентября (по письму университета, приблизительно). Цикл 2026/27: подача до 29.09, зачисление 1.10; официальные даты 2027/28 ещё не опубликованы",src:"письмо университета; call 2026/27 (ukim.edu.mk)"},
+ {id:"s11",tier:"par",name:"International Balkan University (IBU)",country:"Северная Македония",program:"International Economics (English, 4 года)",deadline:"",lang:"Английский",exams:"",schol:"Стипендии за достижения (учёба, спорт, музыка, искусство)",url:"https://www.ibu.edu.mk",feeMin:3000,feeMax:8000,feeNote:"2025/26, для иностранцев, по программам из call: International Economics — 4 000 €, Psychology — 5 000 €, Computer Engineering — 6 000 €, Dentistry — 8 000 €. Цены 2026/27 сверить в новом call",notes:"Есть подготовительная программа по английскому (5 000 € для иностранцев в 2025/26)",src:"call for enrollment 2025/26 (ibu.edu.mk)"},
+ {"id": "s12", "name": "University American College Skopje (UACS)", "country": "Северная Македония", "tier": "par", "program": "", "deadline": "", "lang": "Английский", "visa": "Открыта", "feeNote": "Низкая–средняя (оценка автора)", "schol": "Вероятны частичные скидки (оценка автора)", "url": "https://www.uacs.edu.mk", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s13", "name": "Государственная стипендия Северной Македонии (MON)", "country": "Северная Македония", "tier": "par", "program": "", "deadline": "", "visa": "Открыта", "schol": "Под вопросом: в основном для STEM", "url": "https://www.mon.gov.mk", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s14", "name": "UCLan Cyprus", "country": "Кипр", "tier": "par", "program": "", "deadline": "", "lang": "Английский", "visa": "Открыта", "feeMin": 6000, "feeMax": 12000, "feeNote": "Возможна скидка до 40% на Business", "schol": "Скидки в процентах (по оценке автора, реальные)", "url": "https://www.uclancyprus.ac.cy", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s15", "name": "ASE Bucharest (FABIZ), английский трек", "country": "Румыния", "tier": "par", "program": "", "deadline": "", "lang": "Английский", "visa": "Открыта", "feeNote": "Средняя (оценка автора)", "schol": "Под вопросом, уточняется", "url": "https://fabiz.ase.ro", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s16", "name": "Copenhagen Business School (CBS)", "country": "Дания", "tier": "paid", "program": "BSc International Business и др. (трек полностью на английском)", "deadline": "", "lang": "Английский", "feeMin": 13000, "feeMax": 13000, "feeNote": "Плюс невозвратный сбор €150 за заявку; с проживанием около €25 000/год", "schol": "Нет: университет подтвердил, что скидок и стипендий на бакалавриате нет", "url": "https://www.cbs.dk", "src": "ответ университета"},
+ {"id": "s17", "name": "Universidad Carlos III de Madrid (UC3M)", "country": "Испания", "tier": "paid", "program": "Economics (трек полностью на английском)", "deadline": "", "lang": "Английский", "feeMin": 6800, "feeMax": 8200, "notes": "Одна из самых открытых стран ЕС для граждан РФ на сегодня (оценка автора); стипендии уточняются", "url": "https://www.uc3m.es", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s18", "name": "Румыния: государственная стипендия (MFA)", "country": "Румыния", "tier": "back", "program": "", "deadline": "", "lang": "Румынский + год подготовки", "visa": "Открыта", "feeNote": "Бесплатно, стипендия покрывает обучение", "notes": "Граждане РФ из программы не исключены", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s19", "name": "Греция: государственный трек", "country": "Греция", "tier": "back", "program": "", "deadline": "", "lang": "Греческий + год подготовки", "visa": "Открыта", "feeNote": "Бесплатно", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s20", "name": "Греция: программы на английском", "country": "Греция", "tier": "back", "program": "", "deadline": "", "lang": "Английский", "visa": "Открыта", "feeNote": "Средняя", "notes": "Частные вузы дают скидки за достижения (merit)", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s21", "name": "Хорватия", "country": "Хорватия", "tier": "back", "program": "", "deadline": "", "lang": "Хорватский, частично английский", "visa": "Открыта", "feeNote": "Средняя", "notes": "Государственная стипендия недоступна для граждан РФ", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s22", "name": "Словения", "country": "Словения", "tier": "back", "program": "", "deadline": "", "lang": "В основном словенский на бакалавриате", "visa": "Открыта", "feeMin": 2000, "feeMax": 15000, "notes": "Государственная стипендия недоступна для граждан РФ", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s23", "name": "Люксембург: государственный университет", "country": "Люксембург", "tier": "back", "program": "", "deadline": "", "lang": "Французский или немецкий + английский", "visa": "Открыта", "feeNote": "Почти бесплатно: €200–900 за семестр", "notes": "Экономика не преподаётся полностью на английском", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s24", "name": "Люксембург: UBI (частный вуз)", "country": "Люксембург", "tier": "back", "program": "", "deadline": "", "lang": "Английский", "visa": "Открыта", "feeMin": 10800, "feeMax": 10800, "notes": "Частный вуз без особенно низкой цены", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s25", "name": "Малайзия: Sunway / Taylor’s", "country": "Малайзия", "tier": "back", "program": "", "deadline": "", "lang": "Английский", "visa": "Открыта", "feeNote": "$3 000–10 000/год", "schol": "Частичные скидки 10–50%", "notes": "Twinning-дипломы", "url": "https://www.sunway.edu.my", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s26", "name": "Франция: государственные вузы", "country": "Франция", "tier": "back", "program": "", "deadline": "", "lang": "Французский на бакалавриате", "visa": "Открыта", "feeMin": 2902, "feeMax": 2902, "feeNote": "С 2026/27 учебного года", "notes": "Стипендия Eiffel — только с магистратуры", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s27", "name": "Швеция", "country": "Швеция", "tier": "risk", "program": "", "deadline": "", "warn": "Политический климат по отношению к РФ жёстче среднего по ЕС; формально студенческие визы пока не затронуты. Оценка автора, проверяйте актуальные правила.", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s28", "name": "Нидерланды", "country": "Нидерланды", "tier": "risk", "program": "", "deadline": "", "feeNote": "Около $21–36 тыс. в год вместе с проживанием", "warn": "Та же осторожность, что и по Швеции, плюс очень высокая стоимость.", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s29", "name": "BI Norwegian Business School", "country": "Норвегия", "tier": "risk", "program": "", "deadline": "", "lang": "Английский", "feeMin": 18000, "feeMax": 21000, "warn": "Даже со стипендией 50% — самое дорогое направление в списке.", "url": "https://www.bi.edu", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s30", "name": "Северный Кипр: университеты ТРСК", "country": "Северный Кипр", "tier": "risk", "program": "", "deadline": "", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s31", "name": "Польша", "country": "Польша", "tier": "excl", "program": "", "deadline": "", "notes": "Визовый блок для граждан РФ с 2022 года: студенческие визы почти не выдаются (оценка автора).", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s32", "name": "Чехия", "country": "Чехия", "tier": "excl", "program": "", "deadline": "", "notes": "Визовый блок для граждан РФ: по большинству категорий посольство не работает с гражданами РФ.", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s33", "name": "Лихтенштейн", "country": "Лихтенштейн", "tier": "excl", "program": "", "deadline": "", "notes": "Нет англоязычных бакалаврских программ по бизнесу и гуманитарным наукам.", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s34", "name": "Мальта", "country": "Мальта", "tier": "excl", "program": "", "deadline": "", "notes": "Гранты только для магистратуры и выше.", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s35", "name": "Швейцария", "country": "Швейцария", "tier": "excl", "program": "", "deadline": "", "notes": "Гранты только с магистратуры; государственные вузы в основном не на английском.", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s36", "name": "Германия / Австрия", "country": "Германия", "tier": "excl", "program": "", "deadline": "", "notes": "Для большинства бакалаврских программ нужен немецкий.", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s37", "name": "Уругвай: UDELAR", "country": "Уругвай", "tier": "excl", "program": "", "deadline": "", "notes": "Бесплатно, но нужен испанский.", "src": "ресерч автора, 2026 (не сверено)"},
+ {"id": "s38", "name": "Аргентина: UTDT", "country": "Аргентина", "tier": "excl", "program": "", "deadline": "", "notes": "Бакалавриат полностью на испанском, англоязычного трека нет.", "src": "ответ университета"},
+ {"id": "s39", "name": "Андорра: UdA", "country": "Андорра", "tier": "excl", "program": "", "deadline": "", "notes": "Нужен каталанский: язык с узкой сферой применения.", "src": "ресерч автора, 2026 (не сверено)"}
+];
+const STATUSES=["Присматриваюсь","Готовлю документы","Подано","Ответ получен","Отказ","Не подходит"];
+const DOCS=["Паспорт","Аттестат / диплом","Транскрипт","Языковой сертификат","Эссе / мотивационное письмо","Рекомендации","Оплата сбора"];
+const ST={"Присматриваюсь":"Considering","Готовлю документы":"Preparing documents","Подано":"Applied","Ответ получен":"Reply received","Отказ":"Rejected","Не подходит":"Not a fit"};
+const DC={"Паспорт":"Passport","Аттестат / диплом":"School certificate / diploma","Транскрипт":"Transcript","Языковой сертификат":"Language certificate","Эссе / мотивационное письмо":"Essay / motivation letter","Рекомендации":"Recommendations","Оплата сбора":"Fee payment"};
+const CT={"Италия":"Italy","Венгрия":"Hungary","Болгария":"Bulgaria","Бельгия":"Belgium","Сан-Марино":"San Marino","Косово":"Kosovo","Таиланд":"Thailand","Северная Македония":"North Macedonia","Северный Кипр":"Northern Cyprus","Румыния":"Romania","Греция":"Greece","Хорватия":"Croatia","Словения":"Slovenia","Люксембург":"Luxembourg","Франция":"France","Швеция":"Sweden","Нидерланды":"Netherlands","Дания":"Denmark","Испания":"Spain","Кипр":"Cyprus","Малайзия":"Malaysia","Норвегия":"Norway","Польша":"Poland","Чехия":"Czechia","Лихтенштейн":"Liechtenstein","Мальта":"Malta","Швейцария":"Switzerland","Германия":"Germany","Уругвай":"Uruguay","Аргентина":"Argentina","Андорра":"Andorra"}
+const PM={"Открыта":"Open","Английский":"English","ресерч автора, 2026 (не сверено)":"author’s research, 2026 (not verified)","ответ университета":"university reply"};
+const T={
+ru:{title:"Трекер поступления для нерезидентов ЕС",sub:"Дедлайны, документы, языковые требования и стипендии в одном месте. Пустые поля помечены «уточнить», так как данные нужно сверять с официальными сайтами.",q:"Поиск по названию",allc:"Все страны",alls:"Любой статус",both:"ЕС и не ЕС",onlyeu:"Только ЕС",onlynon:"Только не ЕС",sd:"По дедлайну",se:"Сначала ЕС",sf:"По стоимости (мин.)",sn:"По названию",add:"+ Добавить университет",nname:"Университет *",ncountry:"Страна *",nprog:"Программа",nlang:"Язык обучения",nexams:"Экзамены (CEnT, SAT, IELTS 6.5…)",nschol:"Стипендия",nfmin:"Стоимость от, €/год",nfmax:"Стоимость до, €/год",nurl:"Ссылка на официальную страницу",addb:"Добавить",note:"Данные хранятся только в вашем браузере. Прототип: информация носит справочный характер и не заменяет официальные источники.",eu:"ЕС",non:"не ЕС",tbd:"уточнить",ddl:"дедлайн: уточнить",past:"дедлайн прошёл",left:"ещё {n} дн.",stale:"устарело ({n} дн.)",nv:"не проверено",lang:"Язык",exams:"Экзамены",schol:"Стипендия",fee:"Стоимость",notes:"Заметки",src:"Источник",ver:"Проверено",site:"официальный сайт",nolink:"ссылка: уточнить",defsrc:"сайт университета (не сверено)",yr:"€/год",docs:"документов",vtoday:"Проверил сегодня",del:"Удалить",none:"Ничего не найдено.",exp:"Сохранить в файл",imp:"Загрузить из файла",impok:"Данные загружены",imperr:"Не удалось прочитать файл",stats:"Ведётся анонимная статистика посещений без cookie.",nwarn:"Сноска / риски (необязательно)",tall:"Все группы",t_prio:"Приоритетные",t_par:"Параллельные варианты",t_paid:"Платные (грант маловероятен)",t_back:"Резервные",t_risk:"Рискованные",t_excl:"Исключены",visa:"Виза (для граждан РФ)",ncy:"Северный Кипр: университеты находятся в части острова, которую не контролирует Республика Кипр (член ЕС); ТРСК признана только Турцией. Признание дипломов за пределами Турции не гарантировано и решается в каждом случае отдельно. Проверьте признание диплома до подачи."},
+en:{title:"Admissions tracker for non-EU applicants",sub:"Deadlines, documents, language requirements and scholarships in one place. Empty fields are marked “to confirm”: always check the data against the official websites.",q:"Search by name",allc:"All countries",alls:"Any status",both:"EU and non-EU",onlyeu:"EU only",onlynon:"Non-EU only",sd:"By deadline",se:"EU first",sf:"By cost (min.)",sn:"By name",add:"+ Add a university",nname:"University *",ncountry:"Country *",nprog:"Program",nlang:"Language of instruction",nexams:"Exams (CEnT, SAT, IELTS 6.5…)",nschol:"Scholarship",nfmin:"Cost from, €/year",nfmax:"Cost to, €/year",nurl:"Official page link",addb:"Add",note:"Data is stored only in your browser. Prototype: the information is for reference and does not replace official sources.",eu:"EU",non:"non-EU",tbd:"to confirm",ddl:"deadline: to confirm",past:"deadline passed",left:"{n} days left",stale:"outdated ({n} days)",nv:"not verified",lang:"Language",exams:"Exams",schol:"Scholarship",fee:"Cost",notes:"Notes",src:"Source",ver:"Verified",site:"official website",nolink:"link: to confirm",defsrc:"university website (not checked)",yr:"€/year",docs:"documents",vtoday:"Verified today",del:"Delete",none:"Nothing found.",exp:"Save to file",imp:"Load from file",impok:"Data loaded",imperr:"Could not read the file",stats:"Anonymous visit statistics are collected, no cookies.",nwarn:"Footnote / risks (optional)",tall:"All groups",t_prio:"Priority",t_par:"Parallel options",t_paid:"Paid (grant unlikely)",t_back:"Backup",t_risk:"Risky",t_excl:"Excluded",visa:"Visa (Russian citizens)",ncy:"Northern Cyprus: these universities are in the part of the island not controlled by the Republic of Cyprus (an EU member); the TRNC is recognized only by Turkey. Recognition of degrees outside Turkey is not guaranteed and is decided case by case. Check degree recognition before applying."}};
+const EN={
+s1:{feeNote:"Low (author’s estimate)",schol:"DSU Toscana (need-based)",notes:"Non-EU applicants need an ISEE Parificato; deadline to confirm",src:"university website (not checked)"},
+s2:{feeNote:"Medium–high without a grant",notes:"Apply through the official Stipendium Hungaricum portal in winter; deadline ≈ 15 January (approximate). Covers tuition, stipend and housing (per the author)"},
+s3:{feeNote:"$9,000–13,000 per year without a grant",schol:"Merit (up to 40%) + need-based"},
+s4:{lang:"English",schol:"Academic Excellence, up to 50% of tuition",notes:"The GPA threshold for the scholarship is given in the university’s reply",src:"university email"},
+s5:{lang:"Italian required",schol:"Partial scholarships",notes:"No entrance test. Scholarship by competition (school GPA + family income), announced in December. No standalone economics bachelor",src:"university email"},
+s6:{notes:"CEnT entrance test planned"},
+s7:{notes:"CEnT planned; make sure it is this Venice university"},
+s8:{notes:"Essay of 250–500 words (Word/PDF) to admissions@auk.org",src:"university email"},
+s9:{feeNote:"Low–medium (author’s estimate)",schol:"Super Talent: full coverage + stipend + housing (per the author’s research)",notes:"Essay, portfolio and proof of a win in an international competition"},
+s10:{program:"Political Studies (in English), Faculty of Law; some programs in English, most in Macedonian",lang:"English or Macedonian; one-year language preparation (60 ECTS)",exams:"Selection by secondary-school GPA; aptitude test only for architecture and arts",feeNote:"2026/27, for foreigners: Faculty of Economics — €1,500, Political Studies in English — €2,000, Software Engineering in English — €2,300, medicine/pharmacy in English — €5,000",notes:"Foreigners apply by email to st.student@ukim.edu.mk and send originals to the Rectorate: apostilled diploma, transcripts, birth and citizenship certificates. Deadline ≈ 1 September (per university email, approximate). 2026/27 cycle: apply by 29 Sept, enrol on 1 Oct; official 2027/28 dates not yet published",src:"university email; 2026/27 call (ukim.edu.mk)"},
+s11:{program:"International Economics (English, 4 years)",lang:"English",schol:"Scholarships for achievements (academics, sports, music, art)",feeNote:"2025/26, for international students, programs from the call: International Economics — €4,000, Psychology — €5,000, Computer Engineering — €6,000, Dentistry — €8,000. Check 2026/27 prices in the new call",notes:"A preparatory English program is available (€5,000 for internationals in 2025/26)",src:"2025/26 enrollment call (ibu.edu.mk)"},
+s12:{"feeNote": "Low–medium (author’s estimate)", "schol": "Partial discounts likely (author’s estimate)"},
+s13:{"name": "North Macedonia government scholarship (MON)", "schol": "Uncertain: mostly for STEM"},
+s14:{"feeNote": "Up to 40% discount possible on Business", "schol": "Percentage discounts (realistic, per the author)"},
+s15:{"name": "ASE Bucharest (FABIZ), English track", "feeNote": "Medium (author’s estimate)", "schol": "Uncertain, being clarified"},
+s16:{"program": "BSc International Business and others (fully English track)", "feeNote": "Plus a non-refundable €150 application fee; about €25,000/year including living costs", "schol": "None: the university confirmed there are no waivers or scholarships for bachelor programs"},
+s17:{"program": "Economics (fully English track)", "notes": "One of the most open EU countries for Russian citizens at present (author’s view); scholarships being clarified"},
+s18:{"name": "Romania: government scholarship (MFA)", "lang": "Romanian + a preparatory year", "feeNote": "Free: the scholarship covers tuition", "notes": "Russian citizens are not excluded"},
+s19:{"name": "Greece: public universities", "lang": "Greek + a preparatory year", "feeNote": "Free"},
+s20:{"name": "Greece: English-taught programs", "feeNote": "Medium", "notes": "Private universities offer merit discounts"},
+s21:{"name": "Croatia", "lang": "Croatian, partly English", "feeNote": "Medium", "notes": "The government scholarship is not available to Russian citizens"},
+s22:{"name": "Slovenia", "lang": "Mostly Slovenian at bachelor level", "notes": "The government scholarship is not available to Russian citizens"},
+s23:{"name": "Luxembourg: public university", "lang": "French or German + English", "feeNote": "Almost free: €200–900 per semester", "notes": "Economics is not taught fully in English"},
+s24:{"name": "Luxembourg: UBI (private university)", "notes": "A private university with no especially low price"},
+s25:{"name": "Malaysia: Sunway / Taylor’s", "feeNote": "$3,000–10,000 per year", "schol": "Partial discounts of 10–50%", "notes": "Twinning degrees"},
+s26:{"name": "France: public universities", "lang": "French at bachelor level", "feeNote": "From the 2026/27 academic year", "notes": "The Eiffel scholarship is for master’s level and above"},
+s27:{"name": "Sweden", "warn": "The political climate towards Russia is tougher than the EU average; student visas are formally not affected so far. Author’s assessment: check the current rules."},
+s28:{"name": "Netherlands", "feeNote": "About $21–36k per year including living costs", "warn": "The same caution as for Sweden, plus a very high cost."},
+s29:{"warn": "Even with a 50% scholarship, the most expensive destination on the list."},
+s30:{"name": "Northern Cyprus: TRNC universities"},
+s31:{"name": "Poland", "notes": "Visa block for Russian citizens since 2022: student visas are almost never issued (author’s assessment)."},
+s32:{"name": "Czechia", "notes": "Visa block for Russian citizens: the embassy does not process most categories for Russian citizens."},
+s33:{"name": "Liechtenstein", "notes": "No English-taught bachelor programs in business or humanities."},
+s34:{"name": "Malta", "notes": "Grants only for master’s level and above."},
+s35:{"name": "Switzerland", "notes": "Grants only from master’s level; public universities are mostly not in English."},
+s36:{"name": "Germany / Austria", "notes": "German is required for most bachelor programs."},
+s37:{"notes": "Free, but Spanish is required."},
+s38:{"name": "Argentina: UTDT", "notes": "The bachelor program is fully in Spanish, with no English track."},
+s39:{"notes": "Catalan is required: a language of limited use."}};
+const ANALYTICS=""; // сюда адрес счётчика, например "https://КОД.goatcounter.com/count"
+if(ANALYTICS){const g=document.createElement("script");g.async=true;g.dataset.goatcounter=ANALYTICS;g.src="https://gc.zgo.at/count.js";document.head.appendChild(g)}
+let LANG="";try{LANG=localStorage.getItem("adm-lang")||""}catch(e){}
+if(!LANG)LANG=(navigator.language||"").slice(0,2)==="ru"?"ru":"en";
+const t=(k,n)=>(T[LANG][k]||k).replace("{n}",n);
+const tr=(m,v)=>LANG==="en"?(m[v]||v):v;
+const lu=u=>LANG==="en"&&EN[u.id]?Object.assign({},u,EN[u.id]):u;
+let S={status:{},done:{},custom:[],ver:{}};
+try{const r=localStorage.getItem("adm-v1");if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+Object.keys(S.status).forEach(k=>{if(S.status[k]==="Отказ / не подхожу")S.status[k]="Отказ"});
+const save=()=>{try{localStorage.setItem("adm-v1",JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const all=()=>SEED.concat(S.custom);
+const EU=new Set(("Австрия,Бельгия,Болгария,Венгрия,Германия,Греция,Дания,Ирландия,Испания,Италия,Кипр,Латвия,Литва,Люксембург,Мальта,Нидерланды,Польша,Португалия,Румыния,Словакия,Словения,Финляндия,Франция,Хорватия,Чехия,Швеция,Эстония,"+"Austria,Belgium,Bulgaria,Croatia,Cyprus,Czechia,Czech Republic,Denmark,Estonia,Finland,France,Germany,Greece,Hungary,Ireland,Italy,Latvia,Lithuania,Luxembourg,Malta,Netherlands,Poland,Portugal,Romania,Slovakia,Slovenia,Spain,Sweden").split(","));
+const isEU=u=>EU.has(u.country);
+const NC=/северн[а-яё]*\s+кипр|northern\s+cyprus|trnc/i;
+const warnOf=u=>u.warn||(NC.test(u.country)?t("ncy"):"");
+function daysLeft(d){if(!d)return null;return Math.ceil((new Date(d+"T23:59:59")-new Date())/864e5)}
+function badge(d){const n=daysLeft(d);if(n===null)return `<span class="badge todo">${t("ddl")}</span>`;
+ if(n<0)return `<span class="badge bad">${t("past")}</span>`;
+ const c=n<=30?"bad":n<=90?"warn":"ok";return `<span class="badge ${c}">${d} · ${t("left",n)}</span>`}
+const val=v=>v?esc(v):`<span class="todo">${t("tbd")}</span>`;
+function feeText(u){const a=u.feeMin,b=u.feeMax,f=n=>Number(n).toLocaleString(LANG==="en"?"en-US":"ru-RU");if(!a&&!b)return u.feeNote?esc(u.feeNote):val("");const r=a&&b&&a!==b?`${f(a)}–${f(b)} ${t("yr")}`:`${f(a||b)} ${t("yr")}`;return esc(r)+(u.feeNote?`<br><span class="meta">${esc(u.feeNote)}</span>`:"")}
+function verText(id){const d=S.ver[id];if(!d)return `<span class="todo">${t("nv")}</span>`;const n=Math.floor((Date.now()-new Date(d))/864e5);return n>90?`<span class="bad">${d} · ${t("stale",n)}</span>`:`<span class="ok">${d}</span>`}
+function setOpts(id,a){const el=$(id),v=el.value;el.innerHTML=a.map(([k,l])=>`<option value="${esc(k)}">${esc(l)}</option>`).join("");el.value=v}
+function fill(){
+ const cs=[...new Set(all().map(u=>u.country))].sort();
+ setOpts("country",[["",t("allc")]].concat(cs.map(c=>[c,tr(CT,c)])));
+ setOpts("fstatus",[["",t("alls")]].concat(STATUSES.map(s=>[s,tr(ST,s)])));
+}
+function card(u){
+ const st=S.status[u.id]||STATUSES[0],dn=S.done[u.id]||[];
+ const link=/^https?:\/\//.test(u.url||"")?`<a href="${esc(u.url)}" target="_blank" rel="noopener">${t("site")}</a>`:`<span class="todo">${t("nolink")}</span>`;
+ return `<div class="card${st==="Не подходит"||u.tier==="excl"?" dim":""}"><div class="top"><div><div class="name">${esc(u.name)}</div><div class="meta">${esc(tr(CT,u.country))} · ${isEU(u)?t("eu"):t("non")}${u.tier?" · "+t("t_"+u.tier):""}${u.program?" · "+esc(u.program):""}</div></div>${badge(u.deadline)}</div>${warnOf(u)?`<div class="warnbox">⚠ ${esc(warnOf(u))}</div>`:""}
+ <dl>${u.visa?`<dt>${t("visa")}</dt><dd>${esc(tr(PM,u.visa))}</dd>`:""}<dt>${t("lang")}</dt><dd>${val(tr(PM,u.lang))}</dd><dt>${t("exams")}</dt><dd>${val(u.exams)}</dd><dt>${t("schol")}</dt><dd>${val(u.schol)}</dd><dt>${t("fee")}</dt><dd>${feeText(u)}</dd>${u.notes?`<dt>${t("notes")}</dt><dd>${esc(u.notes)}</dd>`:""}<dt>${t("src")}</dt><dd>${esc(u.src?tr(PM,u.src):t("defsrc"))} · ${link}</dd><dt>${t("ver")}</dt><dd>${verText(u.id)}</dd></dl>
+ <div class="chips">${DOCS.map(d=>`<span class="chip ${dn.includes(d)?"on":""}" data-id="${u.id}" data-doc="${d}">${esc(tr(DC,d))}</span>`).join("")}</div>
+ <div class="row"><select data-st="${u.id}">${STATUSES.map(s=>`<option value="${s}"${s===st?" selected":""}>${esc(tr(ST,s))}</option>`).join("")}</select>
+ <span class="meta">${dn.length}/${DOCS.length} ${t("docs")}</span><button data-ver="${u.id}">${t("vtoday")}</button>${u.id.startsWith("c")?`<button data-del="${u.id}">${t("del")}</button>`:""}</div></div>`}
+function render(){
+ const q=$("q").value.toLowerCase(),c=$("country").value,fs=$("fstatus").value,so=$("sort").value,rg=$("region").value,tg=$("tier").value;
+ let L=all().map(lu).filter(u=>(!q||(u.name+" "+u.program).toLowerCase().includes(q))&&(!c||u.country===c)&&(!rg||(rg==="eu")===isEU(u))&&(!tg||u.tier===tg)&&(!fs||(S.status[u.id]||STATUSES[0])===fs));
+ const dl=(a,b)=>(a.deadline||"9999").localeCompare(b.deadline||"9999"),fm=u=>u.feeMin||u.feeMax||1e9;
+ L.sort((a,b)=>so==="name"?a.name.localeCompare(b.name):so==="eu"?(isEU(b)-isEU(a))||dl(a,b):so==="fee"?fm(a)-fm(b):dl(a,b));
+ $("list").innerHTML=L.length?L.map(card).join(""):`<p class="meta">${t("none")}</p>`;
+}
+function applyStatic(){
+ document.documentElement.lang=LANG;document.title=t("title");
+ $("lang").textContent=LANG==="ru"?"EN":"RU";
+ document.querySelector("h1").textContent=t("title");
+ document.querySelector(".sub").textContent=t("sub");
+ document.querySelector("summary").textContent=t("add");
+ document.querySelector(".note").textContent=t("note")+(ANALYTICS?" "+t("stats"):"");$("exp").textContent=t("exp");$("imp").textContent=t("imp");
+ $("add").textContent=t("addb");$("q").placeholder=t("q");
+ [["n-name","nname"],["n-country","ncountry"],["n-program","nprog"],["n-lang","nlang"],["n-exams","nexams"],["n-schol","nschol"],["n-fmin","nfmin"],["n-fmax","nfmax"],["n-url","nurl"],["n-warn","nwarn"]].forEach(([i,k])=>$(i).placeholder=t(k));
+ setOpts("region",[["",t("both")],["eu",t("onlyeu")],["non",t("onlynon")]]);
+ setOpts("tier",[["",t("tall")]].concat(["prio","par","paid","back","risk","excl"].map(k=>[k,t("t_"+k)])));
+ setOpts("sort",[["deadline",t("sd")],["eu",t("se")],["fee",t("sf")],["name",t("sn")]]);
+ fill();
+}
+$("list").addEventListener("click",e=>{
+ const x=e.target;
+ if(x.dataset.doc){const a=S.done[x.dataset.id]||(S.done[x.dataset.id]=[]),i=a.indexOf(x.dataset.doc);i>-1?a.splice(i,1):a.push(x.dataset.doc);save();render()}
+ if(x.dataset.del){S.custom=S.custom.filter(u=>u.id!==x.dataset.del);save();fill();render()}
+ if(x.dataset.ver){S.ver[x.dataset.ver]=new Date().toISOString().slice(0,10);save();render()}
+});
+$("list").addEventListener("change",e=>{if(e.target.dataset.st){S.status[e.target.dataset.st]=e.target.value;save();render()}});
+["q","country","fstatus","region","tier","sort"].forEach(i=>$(i).addEventListener("input",render));
+$("lang").addEventListener("click",()=>{LANG=LANG==="ru"?"en":"ru";try{localStorage.setItem("adm-lang",LANG)}catch(e){}applyStatic();render()});
+$("add").addEventListener("click",()=>{
+ const name=$("n-name").value.trim(),country=$("n-country").value.trim();if(!name||!country)return;
+ S.custom.push({id:"c"+Date.now(),name,country,program:$("n-program").value.trim(),deadline:$("n-deadline").value,lang:$("n-lang").value.trim(),exams:$("n-exams").value.trim(),schol:$("n-schol").value.trim(),feeMin:+$("n-fmin").value||0,feeMax:+$("n-fmax").value||0,url:$("n-url").value.trim(),warn:$("n-warn").value.trim(),notes:"",src:LANG==="en"?"added manually":"добавлено вручную"});
+ ["n-name","n-country","n-program","n-deadline","n-lang","n-exams","n-schol","n-fmin","n-fmax","n-url","n-warn"].forEach(i=>$(i).value="");
+ save();fill();render();
+});
+function clean(o){
+ if(!o||typeof o!=="object")throw 0;
+ const R={status:{},done:{},ver:{},custom:[]},D=/^\d{4}-\d{2}-\d{2}$/,K=/^[sc]\d+$/,str=(v,n)=>String(v==null?"":v).slice(0,n);
+ for(const[k,v]of Object.entries(o.status||{}))if(K.test(k)&&STATUSES.includes(v))R.status[k]=v;
+ for(const[k,v]of Object.entries(o.done||{}))if(K.test(k)&&Array.isArray(v))R.done[k]=v.filter(d=>DOCS.includes(d));
+ for(const[k,v]of Object.entries(o.ver||{}))if(K.test(k)&&D.test(v))R.ver[k]=v;
+ for(const u of Array.isArray(o.custom)?o.custom:[])if(u&&/^c\d+$/.test(u.id)&&u.name&&u.country)R.custom.push({id:u.id,name:str(u.name,200),country:str(u.country,100),program:str(u.program,300),deadline:D.test(u.deadline)?u.deadline:"",lang:str(u.lang,300),exams:str(u.exams,300),schol:str(u.schol,300),feeMin:+u.feeMin||0,feeMax:+u.feeMax||0,url:/^https?:\/\//.test(u.url)?str(u.url,500):"",notes:str(u.notes,1000),src:str(u.src,200),warn:str(u.warn,500)});
+ return R}
+$("exp").addEventListener("click",()=>{
+ const b=new Blob([JSON.stringify({v:1,status:S.status,done:S.done,ver:S.ver,custom:S.custom},null,1)],{type:"application/json"}),url=URL.createObjectURL(b),a=document.createElement("a");
+ a.href=url;a.download="admissions-progress.json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+$("imp").addEventListener("click",()=>$("impf").click());
+$("impf").addEventListener("change",e=>{
+ const f=e.target.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>{try{const c=clean(JSON.parse(r.result));Object.assign(S.status,c.status);Object.assign(S.done,c.done);Object.assign(S.ver,c.ver);c.custom.forEach(u=>{if(!S.custom.some(x=>x.id===u.id))S.custom.push(u)});save();fill();render();$("iomsg").textContent=t("impok")}catch(x){$("iomsg").textContent=t("imperr")}e.target.value=""};
+ r.readAsText(f)});
+applyStatic();render();
+</script>
+</body>
+</html>
